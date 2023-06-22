@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Snake level 2</title>
+    <style>
+        canvas {
+            border: 3px solid black;
+            background-color: lightgreen;     
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="400" height="400"></canvas>
+    <audio controls autoplay>
+        <source src="audio/2.23-AM.ogg" type="audio/ogg">
+    </audio>
+    <script>
+        //Semua variabel
+        var canvas = document.getElementById("canvas");
+        var ctx = canvas.getContext("2d");
+        var box = 20;
+        var score = 0;
+        var snake = [];
+        snake[0] = { x: 12 * box, y: 10 * box };
+        var direction = "right";
+        var food = {
+            x: Math.floor(Math.random() * 20) * box,
+            y: Math.floor(Math.random() * 20) * box
+        };
+        var obstacles = [
+            { x: 9 * box, y: 6 * box },
+            { x: 9 * box, y: 7 * box },
+            { x: 9 * box, y: 8 * box },
+            { x: 9 * box, y: 9 * box },
+            { x: 9 * box, y: 10 * box },
+            { x: 9 * box, y: 11 * box },
+            { x: 9 * box, y: 12 * box },
+            { x: 9 * box, y: 13 * box },
+
+            { x: 10 * box, y: 6 * box },
+            { x: 10 * box, y: 7 * box },
+            { x: 10 * box, y: 8 * box },
+            { x: 10 * box, y: 9 * box },
+            { x: 10 * box, y: 10 * box },
+            { x: 10 * box, y: 11 * box },
+            { x: 10 * box, y: 12 * box },
+            { x: 10 * box, y: 13 * box },
+            
+            { x: 3 * box, y: 3 * box },
+            { x: 4 * box, y: 3 * box },
+            { x: 5 * box, y: 3 * box },
+            { x: 3 * box, y: 4 * box },
+            { x: 3 * box, y: 5 * box },
+            { x: 16 * box, y: 3 * box },
+            { x: 15 * box, y: 3 * box },
+            { x: 14 * box, y: 3 * box },
+            { x: 16 * box, y: 4 * box },
+            { x: 16 * box, y: 5 * box },
+            { x: 16 * box, y: 16 * box },
+            { x: 16 * box, y: 15 * box },
+            { x: 16 * box, y: 14 * box },
+            { x: 3 * box, y: 16 * box },
+            { x: 3 * box, y: 15 * box },
+            { x: 3 * box, y: 14 * box },
+            { x: 5 * box, y: 16 * box },
+            { x: 4 * box, y: 16 * box },
+            { x: 15 * box, y: 16 * box },
+            { x: 14 * box, y: 16 * box }
+        ];
+
+        //Function menggambar
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            //Draw rintangan
+            ctx.fillStyle = "black";
+            for (var i = 0; i < obstacles.length; i++) {
+                ctx.fillRect(obstacles[i].x, obstacles[i].y, box, box);
+            }
+
+            //Draw ular
+            for (var i = 0; i < snake.length; i++) {
+                ctx.fillStyle = (i === 0) ? "green" : "white";
+                ctx.fillRect(snake[i].x, snake[i].y, box, box);
+                ctx.strokeStyle = "black";
+                ctx.strokeRect(snake[i].x, snake[i].y, box, box);
+            }
+
+            //Draw makanan
+            ctx.fillStyle = "red";
+            ctx.fillRect(food.x, food.y, box, box);
+
+            //Draw score
+            ctx.fillStyle = "red";
+            ctx.font = "20px Arial";
+            ctx.fillText("Score: " + score, box, box);
+        }
+
+        //Keyboard
+        document.addEventListener("keydown", directionControl);
+        function directionControl(event) {
+            if (event.keyCode === 37 && direction !== "right") {
+                direction = "left";
+            } else if (event.keyCode === 38 && direction !== "down") {
+                direction = "up";
+            } else if (event.keyCode === 39 && direction !== "left") {
+                direction = "right";
+            } else if (event.keyCode === 40 && direction !== "up") {
+                direction = "down";
+            }
+        }
+
+        //Gerakan ular
+        function update() {
+            var head = { x: snake[0].x, y: snake[0].y };
+
+            if (direction === "right") head.x += box;
+            if (direction === "left") head.x -= box;
+            if (direction === "up") head.y -= box;
+            if (direction === "down") head.y += box;
+
+            //Collision dengan rintangan
+            if (collision(head, obstacles)) {
+                clearInterval(game);
+            }
+
+            //Collision dengan diri sendiri
+            if (collision(head, snake)) {
+                clearInterval(game);
+            }
+
+            if (head.x >= canvas.width) head.x = 0;
+            if (head.x < 0) head.x = canvas.width - box;
+            if (head.y >= canvas.height) head.y = 0;
+            if (head.y < 0) head.y = canvas.height - box;
+
+            //Kepala ular
+            snake.unshift(head);
+
+            if (head.x === food.x && head.y === food.y) {
+                score +=10;
+                food = {
+                    x: Math.floor(Math.random() * 20) * box,
+                    y: Math.floor(Math.random() * 20) * box
+                };
+            } else {
+                snake.pop();
+            }
+        }
+
+        //Collision detection ular dengan rintangan
+        function collision(head, array) {
+            for (var i = 0; i < array.length; i++) {
+                if (head.x === array[i].x && head.y === array[i].y) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        //Mengatur makanan diluar box rintangan
+        function generateFoodPosition() {
+          var position;
+          do {
+              position = {
+                  x: Math.floor(Math.random() * canvas.width / box) * box,
+                  y: Math.floor(Math.random() * canvas.height / box) * box
+              };
+          } while (collision(position, obstacles) || collision(position, snake));
+          
+          return position;
+      }
+
+        //Loop
+        function main() {
+            draw();
+            update();
+        }
+
+        var game = setInterval(main, 100);
+    </script>
+</body>
+</html>
